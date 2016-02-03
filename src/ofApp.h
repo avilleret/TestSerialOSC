@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxSerial.h"
 #include "ofxOsc.h"
+#include "ofxGui.h"
 
 class SerialMessage
 {
@@ -39,9 +40,13 @@ class ofApp : public ofBaseApp{
         void onSerialBuffer(const ofx::IO::SerialBufferEventArgs& args);
         void onSerialError(const ofx::IO::SerialBufferErrorEventArgs& args);
 
-        ofx::IO::SLIPPacketSerialDevice device;
+        // ofx::IO::SLIPPacketSerialDevice device;
+        ofx::IO::PacketSerialDevice_<ofx::IO::SLIPEncoding, ofx::IO::SLIPEncoding::END, 16384> device;
 
         std::vector<SerialMessage> serialMessages;
+
+        ofxPanel gui;
+        ofParameter<int> ledNumber;
     private:
         void appendMessage( ofxOscMessage& message, osc::OutboundPacketStream& p );
 };

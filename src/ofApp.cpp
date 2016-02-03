@@ -39,6 +39,9 @@ void ofApp::setup()
 
     ofEnableAlphaBlending();
 
+    gui.setup();
+    gui.add(ledNumber.set("number of LED to send", 10, 1, 1000));
+
     std::vector<ofx::IO::SerialDeviceInfo> devicesInfo = ofx::IO::SerialDeviceUtils::listDevices();
 
     ofLogNotice("ofApp::setup") << "Connected Devices: ";
@@ -51,7 +54,7 @@ void ofApp::setup()
     if (!devicesInfo.empty())
     {
         // Connect to the first matching device.
-        bool success = device.setup(devicesInfo[0], 115200);
+        bool success = device.setup(devicesInfo[0], 921600);
 
         if(success)
         {
@@ -135,30 +138,28 @@ void ofApp::draw()
             ++iter;
         }
     }
+    gui.draw();
 }
 
 void ofApp::mouseDragged(int x, int y, int btn){
     ofxOscMessage m;
     m.setAddress("/led");
 
-    char buf[30];
-    int r = float(x) / ofGetWidth()*255.;
-    int g = float(y) / ofGetHeight()*255;
-    int b = btn * 255;
-    for (int i=0; i<30;){
-        buf[i++] = r;
-        buf[i++] = g;
-        buf[i++] = b;
-    }
-    ofLogNotice("mouseDragged") << "send values : " << x << "," << y << "," << btn;
+    char buf[3];
+    buf[0] = float(x) / ofGetWidth()*255.;
+    buf[1] = float(y) / ofGetHeight()*255;
+    buf[2] = btn * 255;
 
-    ofLogNotice("mouseDragged") << "send values : " << r << "," << g << "," << b;
-
-    ofLogNotice("mouseDragged") << "ofDimen : " <<  ofGetWidth() << "x" << ofGetHeight();
+    ofLogNotice("mouseDragged") << "RGB bufer values : " << static_cast<unsigned int>(buf[0]) << "," << static_cast<unsigned int>(buf[1]) << "," << static_cast<unsigned int>(buf[2]);
 
     ofBuffer ofbuf;
-    ofbuf.set(buf,30);
+
+    for (int i=0; i<ledNumber; i++){
+        ofbuf.append(buf,3);
+    }
     m.addBlobArg(ofbuf);
+
+    ofLogNotice("mouseDragged") << "ofBuf size : " << ofbuf.size();
 
     // sender.sendMessage(m);
     // this code come from ofxOscSender::sendMessage in ofxOscSender.cpp
@@ -177,8 +178,12 @@ void ofApp::mouseDragged(int x, int y, int btn){
 
     device.send(original);
 
+    /*
     ofx::IO::ByteBuffer encoded;
     slip.encode(original, encoded);
+
+    ofLogNotice("mouseDragged") << "encoded buffer size : " << encoded.size();
+    */
 }
 
 

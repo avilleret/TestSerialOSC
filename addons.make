@@ -1,3 +1,4 @@
 ofxSerial
 ofxIO
 ofxOsc
+ofxGui
