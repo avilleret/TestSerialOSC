@@ -58,19 +58,22 @@ void onPacket(const uint8_t* buffer, size_t size){
 void setup() {
   // We must specify a packet handler method so that
   serial.setPacketHandler(&onPacket);
-  serial.begin(921600);
+  serial.begin(12000000); // baudrate is ignored, is always run at 12Mbps
   FastLED.addLeds((CLEDController*) &ledController, leds, NUM_LEDS);
- 
-  for (int i=0; i<NUM_LEDS || i<10; i++){
+
+  ledController.setAPA102Brightness(1);
+  for (int i=0; i<NUM_LEDS && i<10; i++){
     // Turn the LED on, then pause
     leds[i] = CRGB::White;
-    FastLED.show();
-    delay(2);
+  }
+
+  FastLED.show();
+  delay(500);
+  for (int i=0; i<NUM_LEDS; i++){
     // Now turn the LED off, then pause
     leds[i] = CRGB::Black;
-    FastLED.show();
-    // delay(500);
   }
+    FastLED.show();
 }
 
 void loop() {
