@@ -38,9 +38,10 @@ void ofApp::setup()
     // 3. Run this app.
 
     ofEnableAlphaBlending();
+    mouse = {0,0,0};
 
     gui.setup();
-    gui.add(ledNumber.set("number of LED to send", 10, 1, 1000));
+    gui.add(ledNumber.set("nb of LED", 1000, 500, 2500));
 
     std::vector<ofx::IO::SerialDeviceInfo> devicesInfo = ofx::IO::SerialDeviceUtils::listDevices();
 
@@ -80,17 +81,48 @@ void ofApp::exit()
 
 void ofApp::update()
 {
-    // Create a byte buffer.
-    ofx::IO::ByteBuffer buffer("Frame Number: " + ofToString(ofGetFrameNum()));
+    ofxOscMessage m;
+    m.setAddress("/led");
 
-    // Send the byte buffer.
-    // ofx::IO::PacketSerialDevice will encode the buffer, send it to the
-    // receiver, and send a packet marker.
-    device.send(buffer);
+    char buf[3];
+    buf[0] = float(mouse[0]) / ofGetWidth()*255.;
+    buf[1] = float(mouse[1]) / ofGetHeight()*255;
+    buf[2] = mouse[2] * 255;
 
-    // ofLogNotice("update") << "sending : " << buffer;
+    // ofLogNotice("mouseDragged") << "RGB bufer values : " << static_cast<unsigned int>(buf[0]) << "," << static_cast<unsigned int>(buf[1]) << "," << static_cast<unsigned int>(buf[2]);
 
-    // ofxOsc::OscBunble bundle;
+    ofBuffer ofbuf;
+
+    for (int i=0; i<ledNumber; i++){
+        ofbuf.append(buf,3);
+    }
+    m.addBlobArg(ofbuf);
+
+    // ofLogNotice("mouseDragged") << "ofBuf size : " << ofbuf.size();
+
+    // sender.sendMessage(m);
+    // this code come from ofxOscSender::sendMessage in ofxOscSender.cpp
+    static const int OUTPUT_BUFFER_SIZE = 8192;
+    char buffer[OUTPUT_BUFFER_SIZE];
+    osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
+
+    // serialise the message
+    bool wrapInBundle = true;
+    if(wrapInBundle) p << osc::BeginBundleImmediate;
+    appendMessage( m, p );
+    if(wrapInBundle) p << osc::EndBundle;
+
+    ofx::IO::SLIPEncoding slip;
+    ofx::IO::ByteBuffer original(p.Data(),p.Size());
+
+    device.send(original);
+
+    /*
+    ofx::IO::ByteBuffer encoded;
+    slip.encode(original, encoded);
+
+    ofLogNotice("mouseDragged") << "encoded buffer size : " << encoded.size();
+    */
 }
 
 
@@ -142,48 +174,7 @@ void ofApp::draw()
 }
 
 void ofApp::mouseDragged(int x, int y, int btn){
-    ofxOscMessage m;
-    m.setAddress("/led");
-
-    char buf[3];
-    buf[0] = float(x) / ofGetWidth()*255.;
-    buf[1] = float(y) / ofGetHeight()*255;
-    buf[2] = btn * 255;
-
-    ofLogNotice("mouseDragged") << "RGB bufer values : " << static_cast<unsigned int>(buf[0]) << "," << static_cast<unsigned int>(buf[1]) << "," << static_cast<unsigned int>(buf[2]);
-
-    ofBuffer ofbuf;
-
-    for (int i=0; i<ledNumber; i++){
-        ofbuf.append(buf,3);
-    }
-    m.addBlobArg(ofbuf);
-
-    ofLogNotice("mouseDragged") << "ofBuf size : " << ofbuf.size();
-
-    // sender.sendMessage(m);
-    // this code come from ofxOscSender::sendMessage in ofxOscSender.cpp
-    static const int OUTPUT_BUFFER_SIZE = 8192;
-    char buffer[OUTPUT_BUFFER_SIZE];
-    osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
-
-    // serialise the message
-    bool wrapInBundle = true;
-    if(wrapInBundle) p << osc::BeginBundleImmediate;
-    appendMessage( m, p );
-    if(wrapInBundle) p << osc::EndBundle;
-
-    ofx::IO::SLIPEncoding slip;
-    ofx::IO::ByteBuffer original(p.Data(),p.Size());
-
-    device.send(original);
-
-    /*
-    ofx::IO::ByteBuffer encoded;
-    slip.encode(original, encoded);
-
-    ofLogNotice("mouseDragged") << "encoded buffer size : " << encoded.size();
-    */
+    mouse = {x,y,btn};
 }
 
 

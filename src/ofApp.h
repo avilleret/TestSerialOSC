@@ -47,6 +47,7 @@ class ofApp : public ofBaseApp{
 
         ofxPanel gui;
         ofParameter<int> ledNumber;
+        vector<int> mouse;
     private:
         void appendMessage( ofxOscMessage& message, osc::OutboundPacketStream& p );
 };
