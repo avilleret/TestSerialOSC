@@ -14,7 +14,7 @@
 PacketSerial_<SLIP, SLIP::END, 8192> serial;
 
 // How many leds in your strip?
-#define NUM_LEDS 300
+#define NUM_LEDS 1000
 
 // For led chips like Neopixels, which have a data line, ground, and power, you just
 // need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
@@ -58,7 +58,7 @@ void onPacket(const uint8_t* buffer, size_t size){
 void setup() {
   // We must specify a packet handler method so that
   serial.setPacketHandler(&onPacket);
-  serial.begin(115200);
+  serial.begin(921600);
   FastLED.addLeds((CLEDController*) &ledController, leds, NUM_LEDS);
  
   for (int i=0; i<NUM_LEDS || i<10; i++){
